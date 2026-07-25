@@ -1,0 +1,898 @@
+openapi: 3.0.3
+info:
+  title: Product PHP API
+  version: 1.0.0
+  description: |
+    Documentacao Swagger/OpenAPI da API RESTful de produtos.
+
+    Rotas de health, autenticacao e produtos implementadas conforme requisitos
+    do projeto.
+  contact:
+    name: Product PHP API
+  license:
+    name: MIT
+    url: https://opensource.org/license/mit/
+servers:
+  - url: /
+    description: Ambiente atual
+  - url: /api/v1
+    description: Ambiente atual com prefixo versionado
+tags:
+  - name: Health
+    description: Monitoramento da API e integracoes.
+  - name: Auth
+    description: Cadastro, login e sessao via JWT.
+  - name: Logs
+    description: Consulta paginada dos logs de requisicoes.
+  - name: Produtos
+    description: CRUD de produtos conforme requisitos do case.
+security: []
+paths:
+  /:
+    get:
+      tags:
+        - Health
+      summary: Status da API
+      operationId: getRootHealth
+      responses:
+        "200":
+          description: API online.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Status da API
+      operationId: getHealth
+      responses:
+        "200":
+          description: API online.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /health/database:
+    get:
+      tags:
+        - Health
+      summary: Status da conexao com o banco de dados
+      operationId: getDatabaseHealth
+      responses:
+        "200":
+          description: Banco de dados online.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DatabaseHealthResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /health/sentry:
+    get:
+      tags:
+        - Health
+      summary: Testa o envio de evento para o Sentry
+      operationId: getSentryHealth
+      responses:
+        "200":
+          description: Evento enviado para o Sentry.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SentryHealthResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+        "503":
+          description: Sentry nao configurado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Cria um usuario
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+            examples:
+              default:
+                value:
+                  login: admin
+                  senha: admin123
+                  name: Administrador
+      responses:
+        "201":
+          description: Usuario criado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "409":
+          description: Usuario ja cadastrado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Autentica um usuario e retorna token JWT
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            examples:
+              default:
+                value:
+                  login: admin
+                  senha: admin123
+      responses:
+        "200":
+          description: Login realizado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /auth/me:
+    get:
+      tags:
+        - Auth
+      summary: Retorna o usuario autenticado
+      operationId: getAuthenticatedUser
+      security:
+        - jwtAuth: []
+      responses:
+        "200":
+          description: Usuario autenticado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /logs:
+    get:
+      tags:
+        - Logs
+      summary: Lista logs de requisicoes
+      description: Retorna os logs ordenados do mais recente para o mais antigo. A consulta exige paginacao.
+      operationId: listRequestLogs
+      security:
+        - jwtAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Lista paginada de logs.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequestLogPaginatedResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /logs/errors:
+    get:
+      tags:
+        - Logs
+      summary: Lista logs com status diferente de 200 e 204
+      description: Retorna os logs dos endpoints cujo status HTTP nao seja 200 OK nem 204 No Content, ordenados do mais recente para o mais antigo. A consulta exige paginacao.
+      operationId: listRequestErrorLogs
+      security:
+        - jwtAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Lista paginada de logs filtrados por status.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequestLogPaginatedResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /produtos:
+    get:
+      tags:
+        - Produtos
+      summary: Lista todos os produtos
+      description: Retorna todos os produtos cadastrados.
+      operationId: listProducts
+      security:
+        - jwtAuth: []
+      responses:
+        "200":
+          description: Lista de produtos.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      tags:
+        - Produtos
+      summary: Cria um produto
+      description: Cadastra um novo produto.
+      operationId: createProduct
+      security:
+        - jwtAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductInput"
+            examples:
+              default:
+                value:
+                  nome: Notebook
+                  descricao: Notebook corporativo
+                  preco: 4599.9
+                  quantidade_estoque: 12
+                  categoria: Informatica
+      responses:
+        "201":
+          description: Produto criado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /produtos/{id}:
+    get:
+      tags:
+        - Produtos
+      summary: Busca um produto pelo ID
+      description: Retorna os dados de um produto especifico.
+      operationId: getProductById
+      security:
+        - jwtAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProductId"
+      responses:
+        "200":
+          description: Produto encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    put:
+      tags:
+        - Produtos
+      summary: Atualiza um produto
+      description: Atualiza todos os dados de um produto.
+      operationId: updateProduct
+      security:
+        - jwtAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProductId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductInput"
+      responses:
+        "200":
+          description: Produto atualizado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    patch:
+      tags:
+        - Produtos
+      summary: Atualiza parcialmente um produto
+      description: Atualiza um ou mais campos de um produto.
+      operationId: patchProduct
+      security:
+        - jwtAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProductId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductPatchInput"
+      responses:
+        "200":
+          description: Produto atualizado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags:
+        - Produtos
+      summary: Remove um produto
+      description: Remove um produto existente.
+      operationId: deleteProduct
+      security:
+        - jwtAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProductId"
+      responses:
+        "204":
+          description: Produto removido.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+components:
+  securitySchemes:
+    jwtAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Envie apenas o token JWT no header, sem prefixos como `JWT` ou `Bearer`. O token e assinado com HS256.
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      required: true
+      description: Numero da pagina, iniciando em zero.
+      schema:
+        type: integer
+        minimum: 0
+        example: 0
+    PageSize:
+      name: pageSize
+      in: query
+      required: true
+      description: Quantidade de itens por pagina. Maximo de 100.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        example: 20
+    ProductId:
+      name: id
+      in: path
+      required: true
+      description: ID do produto.
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+  responses:
+    Unauthorized:
+      description: Token JWT ausente, invalido ou credenciais invalidas.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ValidationError:
+      description: Dados invalidos.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Recurso nao encontrado.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    InternalServerError:
+      description: Erro interno do servidor.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+  schemas:
+    SuccessEnvelope:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          nullable: true
+
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              example: VALIDATION_ERROR
+            message:
+              type: string
+              example: Dados invalidos.
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                    example: login
+                  message:
+                    type: string
+                    example: Informe o login.
+
+    HealthResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessEnvelope"
+        - type: object
+          properties:
+            data:
+              type: object
+              required:
+                - status
+                - service
+                - timestamp
+              properties:
+                status:
+                  type: string
+                  example: online
+                service:
+                  type: string
+                  example: product_php_api
+                timestamp:
+                  type: string
+                  format: date-time
+                  example: "2026-07-23T16:52:33+00:00"
+
+    DatabaseHealthResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessEnvelope"
+        - type: object
+          properties:
+            data:
+              type: object
+              required:
+                - database
+              properties:
+                database:
+                  type: string
+                  example: online
+
+    SentryHealthResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessEnvelope"
+        - type: object
+          properties:
+            data:
+              type: object
+              required:
+                - sentry
+              properties:
+                sentry:
+                  type: string
+                  example: ok
+                event_id:
+                  type: string
+                  nullable: true
+                  example: 4c14451345cc493dbdc1edb029ec462e
+
+    RegisterRequest:
+      type: object
+      required:
+        - login
+        - senha
+      properties:
+        login:
+          type: string
+          maxLength: 120
+          example: admin
+        senha:
+          type: string
+          minLength: 8
+          format: password
+          example: admin123
+        name:
+          type: string
+          maxLength: 120
+          nullable: true
+          example: Administrador
+
+    LoginRequest:
+      type: object
+      required:
+        - login
+        - senha
+      properties:
+        login:
+          type: string
+          maxLength: 120
+          example: admin
+        senha:
+          type: string
+          format: password
+          example: admin123
+
+    User:
+      type: object
+      required:
+        - id
+        - login
+        - created_at
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        login:
+          type: string
+          example: admin
+        name:
+          type: string
+          nullable: true
+          example: Administrador
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-07-23 13:09:05.349302+00"
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+          example: null
+
+    UserResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessEnvelope"
+        - type: object
+          properties:
+            data:
+              type: object
+              required:
+                - user
+              properties:
+                user:
+                  $ref: "#/components/schemas/User"
+
+    LoginResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessEnvelope"
+        - type: object
+          properties:
+            data:
+              type: object
+              required:
+                - token_type
+                - access_token
+                - expires_in
+                - user
+              properties:
+                token_type:
+                  type: string
+                  example: JWT
+                access_token:
+                  type: string
+                  example: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
+                expires_in:
+                  type: integer
+                  example: 3600
+                user:
+                  $ref: "#/components/schemas/User"
+
+    RequestLog:
+      type: object
+      required:
+        - id
+        - method
+        - uri
+        - status_code
+        - user
+        - duration_ms
+        - created_at
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 42
+        method:
+          type: string
+          example: GET
+        uri:
+          type: string
+          example: /produtos?page=0
+        status_code:
+          type: integer
+          example: 200
+        client_ip:
+          type: string
+          nullable: true
+          example: 172.18.0.1
+        user_agent:
+          type: string
+          nullable: true
+          example: PostmanRuntime/7.51.1
+        user:
+          type: object
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/RequestLogUser"
+        duration_ms:
+          type: integer
+          example: 18
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-07-25T16:52:33+00:00"
+
+    RequestLogUser:
+      type: object
+      nullable: true
+      required:
+        - id
+        - login
+        - name
+      properties:
+        id:
+          type: integer
+          format: int64
+          nullable: true
+          example: 3
+        login:
+          type: string
+          nullable: true
+          example: admin123
+        name:
+          type: string
+          nullable: true
+          example: Administrador
+
+    RequestLogPaginatedResponse:
+      type: object
+      required:
+        - data
+        - currentPage
+        - pageCount
+        - totalCount
+        - pageSize
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/RequestLog"
+        currentPage:
+          type: integer
+          minimum: 0
+          example: 0
+        pageCount:
+          type: integer
+          minimum: 0
+          example: 3
+        totalCount:
+          type: integer
+          minimum: 0
+          example: 48
+        pageSize:
+          type: integer
+          minimum: 1
+          maximum: 100
+          example: 20
+
+    Product:
+      type: object
+      required:
+        - id
+        - nome
+        - descricao
+        - preco
+        - quantidade_estoque
+        - categoria
+        - created_at
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        nome:
+          type: string
+          maxLength: 120
+          example: Notebook
+        descricao:
+          type: string
+          example: Notebook corporativo
+        preco:
+          type: number
+          format: float
+          minimum: 0
+          example: 4599.9
+        quantidade_estoque:
+          type: integer
+          minimum: 0
+          example: 12
+        categoria:
+          type: string
+          maxLength: 120
+          example: Informatica
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-07-23T16:52:33+00:00"
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+          example: null
+
+    ProductInput:
+      type: object
+      required:
+        - nome
+        - descricao
+        - preco
+        - quantidade_estoque
+        - categoria
+      properties:
+        nome:
+          type: string
+          maxLength: 120
+          example: Notebook
+        descricao:
+          type: string
+          example: Notebook corporativo
+        preco:
+          type: number
+          format: float
+          minimum: 0
+          example: 4599.9
+        quantidade_estoque:
+          type: integer
+          minimum: 0
+          example: 12
+        categoria:
+          type: string
+          maxLength: 120
+          example: Informatica
+
+    ProductPatchInput:
+      type: object
+      minProperties: 1
+      properties:
+        nome:
+          type: string
+          maxLength: 120
+          example: Notebook
+        descricao:
+          type: string
+          example: Notebook corporativo atualizado
+        preco:
+          type: number
+          format: float
+          minimum: 0
+          example: 4399.9
+        quantidade_estoque:
+          type: integer
+          minimum: 0
+          example: 10
+        categoria:
+          type: string
+          maxLength: 120
+          example: Informatica
+
+    ProductResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessEnvelope"
+        - type: object
+          properties:
+            data:
+              type: object
+              required:
+                - product
+              properties:
+                product:
+                  $ref: "#/components/schemas/Product"
+
+    ProductListResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessEnvelope"
+        - type: object
+          properties:
+            data:
+              type: object
+              required:
+                - products
+              properties:
+                products:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/Product"
