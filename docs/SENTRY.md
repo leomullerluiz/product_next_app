@@ -14,8 +14,8 @@ Com o DSN vazio nada e enviado, entao a aplicacao roda normalmente sem configura
 ## Testando o DSN
 
 A rota `/sentry-test/` mostra se `NEXT_PUBLIC_SENTRY_DSN` foi embutido no build,
-valida o formato basico da DSN e compara o valor renderizado com o valor presente no
-client bundle.
+valida o formato basico da DSN, compara o valor renderizado com o valor presente no
+client bundle e envia um erro client-side de exemplo.
 
 ## Habilitando
 
@@ -54,8 +54,8 @@ client bundle.
 
 ## Notas para export estatico
 
-- Com `output: "export"` so existe o SDK de browser: nao ha `instrumentation.ts` de servidor,
-  tunnel route nem source maps enviados por um runtime Node em producao.
+- Com `output: "export"` so existe o SDK de browser: nao ha API route, tunnel route
+  nem source maps enviados por um runtime Node em producao.
 - O upload de source maps roda no build (CI), com `SENTRY_AUTH_TOKEN` como segredo do
   pipeline — nunca como `NEXT_PUBLIC_*`.
 - Antes de configurar o plugin de build, confira a compatibilidade do `@sentry/nextjs` com a
