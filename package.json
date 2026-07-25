@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build --webpack",
-    "start": "serve out -s -l 3000",
-    "start:heroku": "serve out -s -l $PORT",
+    "start": "serve out -l 3000",
+    "start:heroku": "serve out -l $PORT",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
