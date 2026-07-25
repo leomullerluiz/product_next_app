@@ -1,11 +1,13 @@
 "use client";
 
-import { CheckCircle2, LoaderCircle, LogIn, UserPlus } from "lucide-react";
+import { LoaderCircle, LogIn, UserPlus } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
 import {
   useLoginMutation,
   useRegisterMutation,
 } from "@/facades/auth";
+import { useAuthSession } from "@/contexts/AuthContext";
 import {
   getErrorMessage,
   getFieldErrors,
@@ -14,6 +16,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/utils/cn";
+import { routes } from "@/utils/routes";
 
 type AuthTab = "login" | "register";
 
@@ -29,13 +32,6 @@ type RegisterForm = LoginForm & {
   name: string;
 };
 
-type SessionSummary = {
-  login: string;
-  name: string | null;
-  tokenType: string;
-  expiresIn: number;
-};
-
 const initialLoginForm: LoginForm = {
   login: "",
   senha: "",
@@ -48,6 +44,8 @@ const initialRegisterForm: RegisterForm = {
 };
 
 export function AuthPage() {
+  const router = useRouter();
+  const { startSession } = useAuthSession();
   const [activeTab, setActiveTab] = useState<AuthTab>("login");
   const [loginForm, setLoginForm] = useState<LoginForm>(initialLoginForm);
   const [registerForm, setRegisterForm] =
@@ -55,7 +53,6 @@ export function AuthPage() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [message, setMessage] = useState("");
   const [messageVariant, setMessageVariant] = useState<MessageVariant>("info");
-  const [session, setSession] = useState<SessionSummary | null>(null);
 
   const loginMutation = useLoginMutation();
   const registerMutation = useRegisterMutation();
@@ -77,19 +74,14 @@ export function AuthPage() {
     setFieldErrors({});
     setMessage("");
     setMessageVariant("info");
-    setSession(null);
 
     try {
       const result = await loginMutation.mutateAsync(loginForm);
-      setSession({
-        login: result.user.login,
-        name: result.user.name,
-        tokenType: result.token_type,
-        expiresIn: result.expires_in,
-      });
+      startSession(result);
       setLoginForm((current) => ({ ...current, senha: "" }));
       setMessage("Login realizado com sucesso.");
       setMessageVariant("success");
+      router.push(routes.dashboard);
     } catch (error) {
       setFieldErrors(getFieldErrors(error));
       setMessage(
@@ -106,7 +98,6 @@ export function AuthPage() {
     setFieldErrors({});
     setMessage("");
     setMessageVariant("info");
-    setSession(null);
 
     try {
       const result = await registerMutation.mutateAsync(registerForm);
@@ -254,18 +245,16 @@ export function AuthPage() {
             className={cn(
               "mt-4 rounded-lg border px-3 py-2 text-sm",
               messageVariant === "success" &&
-              "border-emerald-200 bg-emerald-50 text-emerald-900",
+                "border-emerald-200 bg-emerald-50 text-emerald-900",
               messageVariant === "error" &&
-              "border-red-200 bg-red-50 text-red-900",
+                "border-red-200 bg-red-50 text-red-900",
               messageVariant === "info" &&
-              "border-zinc-200 bg-zinc-50 text-zinc-700",
+                "border-zinc-200 bg-zinc-50 text-zinc-700",
             )}
           >
             {message}
           </p>
         ) : null}
-
-
       </section>
     </main>
   );
