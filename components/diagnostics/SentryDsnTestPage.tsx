@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { SentryDsnClientCheck } from "./SentryDsnClientCheck";
+import { SentryEventTester } from "./SentryEventTester";
 import {
   getSentryDsnDiagnostics,
   type SentryDsnDiagnostics,
@@ -74,6 +75,8 @@ export function SentryDsnTestPage() {
         <SentryDsnClientCheck
           expectedFingerprint={diagnostics.fingerprint}
         />
+
+        <SentryEventTester dsnStatus={diagnostics.status} />
       </div>
     </AppShell>
   );
