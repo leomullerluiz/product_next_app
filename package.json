@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build --webpack",
-    "start": "next start",
+    "start": "serve out -s -l 3000",
+    "start:heroku": "serve out -s -l $PORT",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
@@ -19,6 +20,7 @@
     "next": "16.2.11",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "serve": "^14.2.6",
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
