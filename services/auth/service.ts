@@ -26,9 +26,6 @@ export function register(input: RegisterInput) {
 function toAuthBody(input: LoginInput) {
   return {
     login: input.login.trim(),
-    senha: input.senha,
-    // The OpenAPI file uses `senha`, while the Postman collection uses
-    // `password`; sending both keeps this client compatible with both docs.
     password: input.senha,
   };
 }
