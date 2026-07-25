@@ -6,6 +6,8 @@ type ApiEnvelope<T> =
     error: { code?: string; message?: string; details?: unknown };
   };
 
+type ApiFailureEnvelope = Extract<ApiEnvelope<unknown>, { success: false }>;
+
 export class ApiError extends Error {
   status: number;
   code?: string;
@@ -47,6 +49,39 @@ export async function apiRequest<T>(
   path: string,
   init: ApiRequestInit = {},
 ): Promise<T> {
+  const payload = await requestPayload<T>(path, init);
+
+  if (payload === undefined) {
+    return undefined as T;
+  }
+
+  if (!isRecord(payload) || !("data" in payload)) {
+    throw new ApiError({
+      status: 200,
+      message: "A API nao retornou dados.",
+    });
+  }
+
+  return payload.data as T;
+}
+
+export async function apiRawRequest<T>(
+  path: string,
+  init: ApiRequestInit = {},
+): Promise<T> {
+  const payload = await requestPayload<T>(path, init);
+
+  if (payload === undefined) {
+    return undefined as T;
+  }
+
+  return payload as T;
+}
+
+async function requestPayload<T>(
+  path: string,
+  init: ApiRequestInit,
+): Promise<ApiEnvelope<T> | T | undefined> {
   const headers = new Headers(init.headers);
   const isJsonBody =
     Boolean(init.body) &&
@@ -76,11 +111,12 @@ export async function apiRequest<T>(
 
   const payload = (await response
     .json()
-    .catch(() => null)) as ApiEnvelope<T> | null;
+    .catch(() => null)) as ApiEnvelope<T> | T | null;
 
-  if (!response.ok || payload?.success === false) {
-    const error =
-      payload && "error" in payload && payload.error ? payload.error : undefined;
+  const failure = getFailureEnvelope(payload);
+
+  if (!response.ok || failure) {
+    const error = failure?.error;
 
     throw new ApiError({
       status: response.status,
@@ -91,15 +127,26 @@ export async function apiRequest<T>(
   }
 
   if (response.status === 204) {
-    return undefined as T;
+    return undefined;
   }
 
-  if (!payload || !("data" in payload)) {
-    throw new ApiError({
-      status: response.status,
-      message: "A API nao retornou dados.",
-    });
+  return payload ?? undefined;
+}
+
+function getFailureEnvelope(
+  payload: unknown,
+): ApiFailureEnvelope | undefined {
+  if (
+    isRecord(payload) &&
+    payload.success === false &&
+    isRecord(payload.error)
+  ) {
+    return payload as ApiFailureEnvelope;
   }
 
-  return payload.data;
+  return undefined;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }

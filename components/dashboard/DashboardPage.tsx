@@ -1,6 +1,12 @@
 "use client";
 
-import { ClipboardList, LogOut, PackagePlus } from "lucide-react";
+import {
+  ClipboardList,
+  LogOut,
+  PackagePlus,
+  ScrollText,
+  TriangleAlert,
+} from "lucide-react";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -10,8 +16,9 @@ import { cn } from "@/utils/cn";
 import { routes } from "@/utils/routes";
 import { ProductCreatePanel } from "./ProductCreatePanel";
 import { ProductListPanel } from "./ProductListPanel";
+import { RequestLogsPanel } from "./RequestLogsPanel";
 
-type DashboardView = "list" | "create";
+type DashboardView = "list" | "create" | "logs" | "errorLogs";
 
 const navItems: Array<{
   id: DashboardView;
@@ -27,6 +34,16 @@ const navItems: Array<{
     id: "create",
     label: "Cadastrar produto",
     icon: <PackagePlus size={16} />,
+  },
+  {
+    id: "logs",
+    label: "Logs",
+    icon: <ScrollText size={16} />,
+  },
+  {
+    id: "errorLogs",
+    label: "Logs erros",
+    icon: <TriangleAlert size={16} />,
   },
 ];
 
@@ -125,12 +142,19 @@ export function DashboardPage() {
         <section className="flex-1 px-4 py-6 md:px-6 lg:px-8">
           {activeView === "list" ? (
             <ProductListPanel accessToken={session.accessToken} />
-          ) : (
+          ) : null}
+          {activeView === "create" ? (
             <ProductCreatePanel
               accessToken={session.accessToken}
               onCreated={() => setActiveView("list")}
             />
-          )}
+          ) : null}
+          {activeView === "logs" ? (
+            <RequestLogsPanel accessToken={session.accessToken} kind="all" />
+          ) : null}
+          {activeView === "errorLogs" ? (
+            <RequestLogsPanel accessToken={session.accessToken} kind="errors" />
+          ) : null}
         </section>
       </div>
     </main>
