@@ -56,6 +56,24 @@ export function getFieldErrors(error: unknown): Record<string, string> {
     return {};
   }
 
+  if (Array.isArray(error.details)) {
+    return error.details.reduce<Record<string, string>>((acc, item) => {
+      if (
+        typeof item === "object" &&
+        item !== null &&
+        "field" in item &&
+        "message" in item &&
+        typeof item.field === "string" &&
+        typeof item.message === "string" &&
+        !acc[item.field]
+      ) {
+        acc[item.field] = item.message;
+      }
+
+      return acc;
+    }, {});
+  }
+
   if (typeof error.details !== "object" || error.details === null) {
     return {};
   }

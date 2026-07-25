@@ -53,6 +53,23 @@ describe("getFieldErrors", () => {
     });
   });
 
+  it("supports OpenAPI field detail arrays", () => {
+    const error = new ApiError({
+      status: 422,
+      message: "invalid",
+      details: [
+        { field: "login", message: "Informe o login." },
+        { field: "senha", message: "Informe a senha." },
+        { field: "login", message: "Ignorado" },
+      ],
+    });
+
+    expect(getFieldErrors(error)).toEqual({
+      login: "Informe o login.",
+      senha: "Informe a senha.",
+    });
+  });
+
   it("returns an empty object for other errors", () => {
     expect(getFieldErrors(new Error("boom"))).toEqual({});
   });
