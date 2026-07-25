@@ -1,3 +1,11 @@
-export { useCreateProductMutation } from "./mutations";
+export {
+  useCreateProductMutation,
+  useDeleteProductMutation,
+  useUpdateProductMutation,
+} from "./mutations";
 export { useProductsQuery } from "./queries";
-export type { Product, ProductInput } from "@/services/products/types";
+export type {
+  Product,
+  ProductInput,
+  ProductUpdateInput,
+} from "@/services/products/types";

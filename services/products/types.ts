@@ -17,6 +17,11 @@ export type ProductInput = {
   categoria: string;
 };
 
+export type ProductUpdateInput = {
+  id: Product["id"];
+  input: ProductInput;
+};
+
 export type ProductListResult = {
   products: Product[];
 };

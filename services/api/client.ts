@@ -90,6 +90,10 @@ export async function apiRequest<T>(
     });
   }
 
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
   if (!payload || !("data" in payload)) {
     throw new ApiError({
       status: response.status,

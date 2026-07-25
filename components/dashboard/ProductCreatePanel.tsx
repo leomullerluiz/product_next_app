@@ -9,6 +9,10 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 import { useToast } from "@/contexts/ToastContext";
+import {
+  formatBrlCurrencyInput,
+  parseBrlCurrencyInput,
+} from "@/utils/format";
 
 type ProductForm = {
   nome: string;
@@ -123,13 +127,16 @@ export function ProductCreatePanel({
             <Input
               label="Preco"
               name="preco"
-              type="number"
-              min="0"
-              step="0.01"
+              type="text"
+              inputMode="numeric"
+              placeholder="R$ 0,00"
               value={form.preco}
               error={fieldErrors.preco}
               onChange={(event) =>
-                setForm((current) => ({ ...current, preco: event.target.value }))
+                setForm((current) => ({
+                  ...current,
+                  preco: formatBrlCurrencyInput(event.target.value),
+                }))
               }
               required
             />
@@ -174,7 +181,7 @@ export function ProductCreatePanel({
 }
 
 function toProductInput(form: ProductForm): ProductInput | null {
-  const preco = Number(form.preco);
+  const preco = parseBrlCurrencyInput(form.preco);
   const quantidadeEstoque = Number(form.quantidade_estoque);
 
   if (

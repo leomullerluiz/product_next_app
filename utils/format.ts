@@ -34,6 +34,26 @@ export function formatCurrency(
   return formatNumber(value, { style: "currency", currency }, locale);
 }
 
+export function formatBrlCurrencyInput(value: string) {
+  const digits = onlyDigits(value);
+
+  if (!digits) {
+    return "";
+  }
+
+  return formatCurrency(Number(digits) / 100);
+}
+
+export function parseBrlCurrencyInput(value: string) {
+  const digits = onlyDigits(value);
+
+  if (!digits) {
+    return Number.NaN;
+  }
+
+  return Number(digits) / 100;
+}
+
 export function truncate(value: string, max: number) {
   if (value.length <= max) {
     return value;
@@ -43,4 +63,8 @@ export function truncate(value: string, max: number) {
   const lastSpace = sliced.lastIndexOf(" ");
 
   return `${lastSpace > max * 0.6 ? sliced.slice(0, lastSpace) : sliced}...`;
+}
+
+function onlyDigits(value: string) {
+  return value.replace(/\D/g, "");
 }

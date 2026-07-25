@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { formatCurrency, formatDate, formatNumber, truncate } from "@/utils/format";
+import {
+  formatBrlCurrencyInput,
+  formatCurrency,
+  formatDate,
+  formatNumber,
+  parseBrlCurrencyInput,
+  truncate,
+} from "@/utils/format";
 
 describe("formatDate", () => {
   it("returns an empty string for an invalid date", () => {
@@ -25,6 +32,20 @@ describe("formatNumber", () => {
 describe("formatCurrency", () => {
   it("includes the currency symbol", () => {
     expect(formatCurrency(10)).toContain("R$");
+  });
+});
+
+describe("formatBrlCurrencyInput", () => {
+  it("formats only digits as BRL currency", () => {
+    expect(formatBrlCurrencyInput("abc1234!")).toContain("12,34");
+    expect(formatBrlCurrencyInput("abc")).toBe("");
+  });
+});
+
+describe("parseBrlCurrencyInput", () => {
+  it("parses BRL currency text to number", () => {
+    expect(parseBrlCurrencyInput("R$ 4.599,90")).toBe(4599.9);
+    expect(parseBrlCurrencyInput("")).toBeNaN();
   });
 });
 
