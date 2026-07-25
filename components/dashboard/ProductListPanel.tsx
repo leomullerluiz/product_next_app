@@ -1,12 +1,26 @@
 "use client";
 
-import { RefreshCw } from "lucide-react";
+import { EllipsisVertical, RefreshCw } from "lucide-react";
 import { useProductsQuery } from "@/facades/products";
 import { getErrorMessage } from "@/services/api/errors";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { formatCurrency, formatDate } from "@/utils/format";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export function ProductListPanel({ accessToken }: { accessToken: string }) {
   const productsQuery = useProductsQuery(accessToken);
@@ -72,6 +86,7 @@ export function ProductListPanel({ accessToken }: { accessToken: string }) {
                   <th className="px-4 py-3">Preco</th>
                   <th className="px-4 py-3">Estoque</th>
                   <th className="px-4 py-3">Criado em</th>
+                  <th className="px-4 py-3"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
@@ -94,6 +109,17 @@ export function ProductListPanel({ accessToken }: { accessToken: string }) {
                     </td>
                     <td className="px-4 py-3 text-zinc-500">
                       {formatDate(product.created_at)}
+                    </td>
+                    <td>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger render={<EllipsisVertical />} />
+                        <DropdownMenuContent className="w-40" align="start">
+                          <DropdownMenuGroup>
+                            <DropdownMenuLabel>Editar</DropdownMenuLabel>
+                            <DropdownMenuLabel>Excluir</DropdownMenuLabel>
+                          </DropdownMenuGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </td>
                   </tr>
                 ))}
