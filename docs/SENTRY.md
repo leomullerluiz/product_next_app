@@ -11,6 +11,12 @@ NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE=0
 
 Com o DSN vazio nada e enviado, entao a aplicacao roda normalmente sem configuracao.
 
+## Testando o DSN
+
+A rota `/sentry-test/` mostra se `NEXT_PUBLIC_SENTRY_DSN` foi embutido no build,
+valida o formato basico da DSN e compara o valor renderizado com o valor presente no
+client bundle.
+
 ## Habilitando
 
 1. Instale o SDK:

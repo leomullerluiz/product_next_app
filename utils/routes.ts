@@ -3,6 +3,7 @@ export const routes = {
   about: "/about/",
   dashboard: "/dashboard/",
   examples: "/examples/",
+  sentryTest: "/sentry-test/",
 } as const;
 
 export type AppRoute = (typeof routes)[keyof typeof routes];
